@@ -63,6 +63,8 @@ def create_graphs(file_name, column_name_list=None, observed=None):
         x = df[columns[0]] # Date
         # drop header row
         x = x.drop([0])
+        # convert x to datetime
+        x = pd.to_datetime(x)
         # Get the y axis
         y = df[columns[1:num_columns]]
         # drop header row
@@ -79,8 +81,8 @@ def create_graphs(file_name, column_name_list=None, observed=None):
         plt.ioff()
         for i in range(num_graphs):
             plt.plot(x, y[y.columns[i]], label=y.columns[i])
-            # reduce the number of ticks on x axis
-            plt.xticks(np.arange(0, len(x), step=365))
+            # reduce the number of ticks for dates on x axis
+            plt.xticks(rotation=35)
             plt.xlabel(columns[0])
             # reduce the number of ticks on y axis to 15 ticks between min and max
             min = y[y.columns[i]].min()
@@ -136,6 +138,9 @@ def read_observed_data(file_name, sheet_name, colunm_name):
     # df = df.dropna(axis=1, how='all')
     # drop all columns except the one with the date and the column_name
     df = df[['Date', colunm_name]]
+    
+    # change Date to datetime
+    df['Date'] = pd.to_datetime(df['Date'])
 
     return df
 
@@ -157,17 +162,23 @@ def main():
 
     # define where the observed data is stored and to which coulmn it corresponds
     observed = {
-        'Recharge': os.path.abspath('./data_observed/GMN_waterleaching.xlsx'),
-        'NLeach': os.path.abspath('./data_observed/GMN_Nleaching.xlsx')
+        'Recharge': os.path.abspath('./observed_data/test_sim2.xlsx'),
+        'NLeach': os.path.abspath('./observed_data/test_sim1.xlsx')
     }
     
 
-    sim_folder = './data_sim'
+    sim_folder = './sim_data'
     os.chdir(sim_folder)
     # Get the csv files
     csv_files = get_csv_files()
-    # get keys from csv file names BR1_result.csv -> BR1
-    keys = [file.split('_')[0] for file in csv_files]
+    # get keys from csv file names BR1_result.csv or BR1-out.csv -> BR1
+    keys = []
+    for file in csv_files:
+        tokens = file.split('_')
+        if len(tokens) == 1:
+            tokens = file.split('-')
+        keys.append( tokens[0])
+    
     # create a dictionary with the keys and the csv files
     csv_files = dict(zip(keys, csv_files))
 
