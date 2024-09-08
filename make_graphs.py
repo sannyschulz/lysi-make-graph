@@ -90,6 +90,18 @@ def create_graphs(file_name, column_name_list=None, observed=None):
             #label = np.linspace(min, max, 15)
             plt.yticks(np.linspace(min, max, 15))
             plt.ylabel(columns[i+1])
+            title = columns[i+1]
+            if observed is not None and title.endswith('_Accumulated'):
+                title = title[:-12] # remove _Accumulated
+                if title in observed:
+                    observed_df = observed[title]
+                    # get column name that is not Date
+                    column_name = observed_df.columns[1]
+                    # Get the y axis
+                    obs_y = observed_df[column_name]
+                    obs_x = observed_df['Date'] # Date
+                    plt.plot(obs_x, obs_y, label='Observed')
+            
             plt.title(columns[i+1])
             plt.legend()
             # Save the graph
@@ -141,6 +153,8 @@ def read_observed_data(file_name, sheet_name, colunm_name):
     
     # change Date to datetime
     df['Date'] = pd.to_datetime(df['Date'])
+    # change column_name to float
+    df[colunm_name] = df[colunm_name].astype(float)
 
     return df
 
