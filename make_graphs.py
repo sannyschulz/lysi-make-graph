@@ -99,6 +99,7 @@ def create_graphs(file_name, column_name_list=None, observed=None):
                     for i in range(1, len_Col):
                         if observed_df.columns[i] != 'Date': 
                             label = 'Observed'
+                            # add units to label
                             if len(units) > 0:
                                 label = label + ' ' + units[idxUnits]  
                                 idxUnits += 1
@@ -106,15 +107,16 @@ def create_graphs(file_name, column_name_list=None, observed=None):
                             column_name = observed_df.columns[i]
                             # Get column at index i
                             obs_y = observed_df.iloc[:, i]
-                            # get min and max of observed data
+                            # adjust min and max with observed data
                             minY = obs_y.min()
                             maxY = obs_y.max()
                             if minY < min:
                                 min = minY
                             if maxY > max:
                                 max = maxY
-                            obs_x = observed_df['Date'] # Date
+                            obs_x = observed_df['Date'] 
                             plt.plot(obs_x, obs_y, label=label)
+                            break # only first column is used (remove this break if you want to see more)
                     
             plt.yticks(np.linspace(min, max, 15))
             plt.ylabel(currentColumn)
