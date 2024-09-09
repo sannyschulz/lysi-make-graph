@@ -77,9 +77,9 @@ def create_graphs(file_name, column_name_list=None, observed=None):
         os.makedirs(output_folder, exist_ok=True)
         pathToOutput = os.path.join(os.getcwd(), output_folder)
         # Create the graphs
-        # Turn off interactive mode
-        plt.ioff()
         for i in range(num_graphs):
+            currentColumn = columns[i+1]
+            print("current:", currentColumn)
             plt.plot(x, y[y.columns[i]], label=y.columns[i])
             # reduce the number of ticks for dates on x axis
             plt.xticks(rotation=35)
@@ -87,7 +87,7 @@ def create_graphs(file_name, column_name_list=None, observed=None):
             # reduce the number of ticks on y axis to 15 ticks between min and max
             min = y[y.columns[i]].min()
             max = y[y.columns[i]].max()
-            title = columns[i+1]
+            title = currentColumn
             if observed is not None and title.endswith('_Accumulated'):
                 title = title[:-12] # remove _Accumulated
                 if title in observed:
@@ -117,11 +117,12 @@ def create_graphs(file_name, column_name_list=None, observed=None):
                             plt.plot(obs_x, obs_y, label=label)
                     
             plt.yticks(np.linspace(min, max, 15))
-            plt.ylabel(columns[i+1])
-            plt.title(columns[i+1])
+            plt.ylabel(currentColumn)
+            plt.title(currentColumn)
             plt.legend()
             # Save the graph
-            plt.savefig(f"{pathToOutput}/{columns[i+1]}.png")
+            plt.savefig(f"{pathToOutput}/{currentColumn}.png")
+            print(f"Graph {pathToOutput}/{currentColumn}.png created")
             plt.close()
 
 # Function to accumulate the data day by day and add it as a column to the dataframe
