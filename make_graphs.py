@@ -87,21 +87,37 @@ def create_graphs(file_name, column_name_list=None, observed=None):
             # reduce the number of ticks on y axis to 15 ticks between min and max
             min = y[y.columns[i]].min()
             max = y[y.columns[i]].max()
-            #label = np.linspace(min, max, 15)
-            plt.yticks(np.linspace(min, max, 15))
-            plt.ylabel(columns[i+1])
             title = columns[i+1]
             if observed is not None and title.endswith('_Accumulated'):
                 title = title[:-12] # remove _Accumulated
                 if title in observed:
-                    observed_df = observed[title]
+                    observed_df = observed[title][0]
+                    units = observed[title][1]
                     # get column name that is not Date
-                    column_name = observed_df.columns[1]
-                    # Get the y axis
-                    obs_y = observed_df[column_name]
-                    obs_x = observed_df['Date'] # Date
-                    plt.plot(obs_x, obs_y, label='Observed')
-            
+                    len_Col = len(observed_df.columns)
+                    idxUnits = 0
+                    for i in range(1, len_Col):
+                        if observed_df.columns[i] != 'Date': 
+                            label = 'Observed'
+                            if len(units) > 0:
+                                label = label + ' ' + units[idxUnits]  
+                                idxUnits += 1
+                                                        
+                            column_name = observed_df.columns[i]
+                            # Get column at index i
+                            obs_y = observed_df.iloc[:, i]
+                            # get min and max of observed data
+                            minY = obs_y.min()
+                            maxY = obs_y.max()
+                            if minY < min:
+                                min = minY
+                            if maxY > max:
+                                max = maxY
+                            obs_x = observed_df['Date'] # Date
+                            plt.plot(obs_x, obs_y, label=label)
+                    
+            plt.yticks(np.linspace(min, max, 15))
+            plt.ylabel(columns[i+1])
             plt.title(columns[i+1])
             plt.legend()
             # Save the graph
@@ -139,9 +155,15 @@ def read_observed_data(file_name, sheet_name, colunm_name):
         return
     # read the sheet
     df = pd.read_excel(file_name, sheet_name=sheet_name)
+    units = []
     # check if df has column date
     if 'Date' not in df.columns:
+        # get column names that don't start with Unnamed as Units
+        for column in df.columns:
+            if not column.startswith('Unnamed'):
+                units.append(column)
         df.columns = df.iloc[0]
+
 
     #df.columns = df.iloc[0]
     # # drop rows with all NaN
@@ -150,13 +172,14 @@ def read_observed_data(file_name, sheet_name, colunm_name):
     # df = df.dropna(axis=1, how='all')
     # drop all columns except the one with the date and the column_name
     df = df[['Date', colunm_name]]
+    # remove header row
+    df = df.drop([0])
     
     # change Date to datetime
     df['Date'] = pd.to_datetime(df['Date'])
     # change column_name to float
     df[colunm_name] = df[colunm_name].astype(float)
-
-    return df
+    return df,units
 
 # Function to get the csv files
 def get_csv_files():
@@ -176,8 +199,8 @@ def main():
 
     # define where the observed data is stored and to which coulmn it corresponds
     observed = {
-        'Recharge': os.path.abspath('./observed_data/test_sim2.xlsx'),
-        'NLeach': os.path.abspath('./observed_data/test_sim1.xlsx')
+        'Recharge': os.path.abspath('./observed_data/GMN_waterleaching.xlsx'),
+        'NLeach': os.path.abspath('./observed_data/GMN_Nleaching.xlsx')
     }
     
 
